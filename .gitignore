@@ -1,0 +1,10 @@
+client_secret_*.json
+credentials.json
+data.json
+token.json
+
+# Devenv
+.devenv*
+devenv.local.nix
+.direnv/
+
