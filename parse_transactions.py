@@ -40,8 +40,22 @@ def parse_category_from_description(
         return {"category": "Travel", "sub_category": "Hotels"}
     elif "hotels" in description.lower() and (category in {"Travel", "Unknown"}):
         return {"category": "Travel", "sub_category": "Hotels"}
-    elif "ikea" in description.lower() and (category in {"Home", "Unknown"}):
+    elif "ikea" in description.lower() and (
+        category in {"Home", "Home Improvement", "Unknown"}
+    ):
         return {"category": "Home Improvement", "sub_category": "Furniture Stores"}
+    elif "heating" in description.lower() and (
+        category in {"Home", "Home Improvement", "Unknown"}
+    ):
+        return {"category": "Home Improvement", "sub_category": "HVAC"}
+    elif "control tech" in description.lower() and (
+        category in {"Home", "Home Improvement", "Unknown"}
+    ):
+        return {"category": "Home Improvement", "sub_category": "HVAC"}
+    elif "ben franklin" in description.lower() and (
+        category in {"Home", "Home Improvement", "Unknown"}
+    ):
+        return {"category": "Home Improvement", "sub_category": "Plumbing"}
     elif "LS SILVER IN THE CITY" in description:
         return {"category": "Shopping", "sub_category": "Gift Shops"}
     elif "LS GRAY GOAT BICYCLE" in description:
@@ -85,6 +99,8 @@ def parse_category_from_description(
         return {"category": "Entertainment"}
     elif "target.com" in description.lower():
         return {"category": "Shopping", "sub_category": "Online Retailers"}
+    elif "walmart.com" in description.lower():
+        return {"category": "Shopping", "sub_category": "Online Retailers"}
     elif "name-cheap.com" in description.lower():
         return {"category": "Online Tools", "sub_category": "Domain Hosting"}
     elif "foreign transaction fee" in description.lower():
@@ -124,7 +140,7 @@ def parse_category(*, category: str, description: str):
         return {"category": "Travel"}
     elif category in ("Food & Drink", "Restaurants", "Dining"):
         return {"category": "Dining"}
-    elif category == "Shopping":
+    elif category in ("Shopping", "Merchandise"):
         return {"category": "Shopping"}
     elif category == "Personal":
         return {"category": "Personal"}
@@ -134,6 +150,8 @@ def parse_category(*, category: str, description: str):
         return {"category": "Groceries", "sub_category": "Supermarkets"}
     elif category == "Automotive":
         return {"category": "Automotive"}
+    elif category in ("Services", "Professional Services"):
+        return {"category": "Services"}
 
     return None
 

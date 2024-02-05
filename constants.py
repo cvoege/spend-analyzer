@@ -87,6 +87,7 @@ CATEGORIES: list[Category] = [
     {"name": "Insurance"},
     {"name": "Automotive"},
     {"name": "Utilities"},
+    {"name": "Services"},
     {"name": "Donations"},
     {"name": "Personal", "sub_categories": [{"name": "Hair"}]},
     {"name": "Education", "sub_categories": [{"name": "Museums"}]},
