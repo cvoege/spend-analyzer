@@ -12,20 +12,85 @@ class Category(TypedDict):
 
 
 CATEGORIES: list[Category] = [
-    {"name": "Dining"},
+    {"name": "Dining", "sub_categories": {"name": "Coffee"}},
     {
         "name": "Groceries",
-        "sub_categories": [{"name": "Whole Foods"}, {"name": "Target"}],
+        "sub_categories": [
+            {"name": "Grocery Stores"},
+            {"name": "Whole Foods"},
+            {"name": "Target"},
+            {"name": "Supermakerts"},
+            {"name": "Walmart"},
+        ],
     },
     {"name": "PayPal"},
     {"name": "Gas"},
     {"name": "Amazon"},
-    {"name": "Entertainment", "sub_categories": [{"name": "Streaming"}]},
-    {"name": "Fitness"},
-    {"name": "Home Improvement"},
-    {"name": "Shopping", "sub_categories": [{"name": "Online Retailers"}]},
-    {"name": "Travel"},
+    {
+        "name": "Entertainment",
+        "sub_categories": [
+            {"name": "Streaming"},
+            {"name": "Movie Theatres"},
+            {"name": "Bars"},
+            {"name": "Concerts"},
+            {"name": "Newspapers"},
+            {"name": "Video Games"},
+        ],
+    },
+    {
+        "name": "Health & Wellness",
+        "sub_categories": [
+            {"name": "Tennis"},
+            {"name": "Gym"},
+            {"name": "Community Center"},
+        ],
+    },
+    {
+        "name": "Home Improvement",
+        "sub_categories": [
+            {"name": "Hardware Stores"},
+            {"name": "Furniture Stores"},
+            {"name": "Electricians"},
+            {"name": "Plumbers"},
+            {"name": "HVAC"},
+            {"name": "Other Contractors"},
+        ],
+    },
+    {
+        "name": "Shopping",
+        "sub_categories": [
+            {"name": "Online Retailers"},
+            {"name": "Amazon"},
+            {"name": "Gift Shops"},
+            {"name": "Bike Shops"},
+        ],
+    },
+    {
+        "name": "Travel",
+        "sub_categories": [
+            {"name": "Flights"},
+            {"name": "Hotels"},
+            {"name": "Ride Sharing"},
+        ],
+    },
+    {
+        "name": "Online Tools",
+        "sub_categories": [
+            {"name": "Search Engines"},
+            {"name": "Tax Software"},
+            {"name": "Domain Hosting"},
+        ],
+    },
     {"name": "Drug Stores"},
+    {"name": "Medical", "sub_categories": [{"name": "Insurance Premiums"}]},
+    {"name": "Veterinary"},
+    {"name": "Insurance"},
+    {"name": "Automotive"},
+    {"name": "Utilities"},
+    {"name": "Donations"},
+    {"name": "Personal", "sub_categories": [{"name": "Hair"}]},
+    {"name": "Education", "sub_categories": [{"name": "Museums"}]},
+    {"name": "Fees", "sub_categories": [{"name": "Foreign Transaction Fees"}]},
 ]
 
 
@@ -139,7 +204,28 @@ CREDIT_CARDS: list[CreditCard] = [
 class Transaction(TypedDict):
     description: str
     category: str
-    sub_category: NotRequired[str]
+    sub_category: str
+    original_category: str
+    credit_card_name: str
     date: datetime.date
     amount: float
     original_data: dict[str, str]
+
+
+class TransactionData(TypedDict):
+    transaction_sheet_name: str
+    credit_card: str
+    transactions: list[Transaction]
+
+
+class IndexData(TypedDict):
+    transaction_sheet_name: str
+    credit_card: str
+
+
+class SheetMetadataProperties(TypedDict):
+    title: str
+
+
+class SheetMetadata(TypedDict):
+    properties: SheetMetadataProperties

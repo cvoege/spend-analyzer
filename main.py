@@ -11,12 +11,19 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import inflection
 
-from constants import CreditCard, Transaction
+from constants import (
+    CREDIT_CARDS,
+    CreditCard,
+    IndexData,
+    SheetMetadata,
+    Transaction,
+    TransactionData,
+)
 from parse_transactions import parse_transactions
-from utils import snakeify_english
+from utils import flatten, snakeify_english
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 # The ID and range of a sample spreadsheet.
 # SAMPLE_RANGE_NAME = "Class Data!A2:E"
@@ -73,13 +80,13 @@ def get_spreadsheet_id() -> str:
     return id
 
 
-def get_sheets():
+def get_sheets() -> list[SheetMetadata]:
     spreadsheet_metadata = SHEETS_API.get(spreadsheetId=get_spreadsheet_id()).execute()
     sheets = spreadsheet_metadata["sheets"]
     return sheets
 
 
-def get_index_data():
+def get_index_data() -> list[IndexData]:
     base_index_data = (
         SHEETS_API.values()
         .get(spreadsheetId=get_spreadsheet_id(), range="Index")
@@ -105,17 +112,19 @@ def main():
     Prints values from a sample spreadsheet.
     """
 
+    spreadsheet_id = get_spreadsheet_id()
     index_data = get_index_data()
+    sheets = get_sheets()
 
     transaction_sheet_names = [row["transaction_sheet_name"] for row in index_data]
 
     transaction_results = (
         SHEETS_API.values()
-        .batchGet(spreadsheetId=get_spreadsheet_id(), ranges=transaction_sheet_names)
+        .batchGet(spreadsheetId=spreadsheet_id, ranges=transaction_sheet_names)
         .execute()
     )
 
-    full_transaction_data = []
+    full_transaction_data: list[TransactionData] = []
     for index_row in index_data:
         current_value_range = None
         for value_range in transaction_results["valueRanges"]:
@@ -136,12 +145,80 @@ def main():
             {
                 **index_row,
                 "transactions": parse_transactions(
-                    credit_card=index_row["credit_card"],
+                    credit_card=[
+                        card
+                        for card in CREDIT_CARDS
+                        if card["name"] == index_row["credit_card"]
+                    ][0],
                     headers=current_value_range["values"][0],
                     values=current_value_range["values"][1:],
                 ),
             }
         )
+
+    all_transactions: list[Transaction] = sorted(
+        flatten(
+            [
+                transaction_data["transactions"]
+                for transaction_data in full_transaction_data
+            ]
+        ),
+        key=lambda transaction: transaction["date"],
+    )
+
+    sheet_names = [sheet["properties"]["title"] for sheet in sheets]
+    if "All Transactions" not in sheet_names:
+        batch_update_values_request_body = {
+            "requests": [{"addSheet": {"properties": {"title": "All Transactions"}}}]
+        }
+        request = SERVICE.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id, body=batch_update_values_request_body
+        )
+        request.execute()
+
+    full_transaction_sheet_values = [
+        [
+            "Date",
+            "Description",
+            "Category",
+            "Sub-Category",
+            "Original Category",
+            "Amount",
+            "Credit Card",
+        ]
+    ]
+
+    content_rows = [
+        [
+            f"{transaction['date'].month}/{transaction['date'].day}/{transaction['date'].year}",
+            transaction["description"],
+            transaction["category"],
+            transaction["sub_category"],
+            transaction["original_category"],
+            f"${transaction['amount']}",
+            transaction["credit_card_name"],
+        ]
+        for transaction in all_transactions
+    ]
+
+    full_transaction_sheet_values.extend(content_rows)
+
+    data = [
+        {
+            "range": "All Transactions!A1:Z10000",
+            "values": full_transaction_sheet_values,
+        },
+        # Additional ranges to update ...
+    ]
+    value_input_option = "USER_ENTERED"
+
+    body = {"valueInputOption": value_input_option, "data": data}
+    result = (
+        SERVICE.spreadsheets()
+        .values()
+        .batchUpdate(spreadsheetId=spreadsheet_id, body=body)
+        .execute()
+    )
 
     # values = result.get("values", [])
 
@@ -157,3 +234,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Recommendations
+# Foreign transaction fees, check if they have a card without them, if so tell them to use it, if not tell them to consider one

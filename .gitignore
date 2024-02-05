@@ -8,3 +8,4 @@ token.json
 devenv.local.nix
 .direnv/
 
+**/__pycache__
