@@ -12,6 +12,10 @@ def parse_category_from_description(
         return {"category": "Groceries", "sub_category": "Whole Foods"}
     elif "netflix.com" in description.lower():
         return {"category": "Entertainment", "sub_category": "Streaming"}
+    elif "HULU" in description.upper():
+        return {"category": "Entertainment", "sub_category": "Streaming"}
+    elif "SPOTIFY" in description.upper():
+        return {"category": "Entertainment", "sub_category": "Streaming"}
     elif "kagi.com" in description.lower():
         return {"category": "Online Tools", "sub_category": "Search Engines"}
     elif "imax theatre indianapolis" in description.lower():
@@ -72,7 +76,7 @@ def parse_category_from_description(
         return {"category": "Entertainment", "sub_category": "Newspapers"}
     elif "Prime Video" in description:
         return {"category": "Entertainment", "sub_category": "Streaming"}
-    elif "AMZN Mktp" in description:
+    elif "amzn mktp" in description.lower() or "amazon.com" in description.lower():
         return {"category": "Shopping", "sub_category": "Amazon"}
     elif "Amazon Prime*" in description:
         return {"category": "Shopping", "sub_category": "Amazon"}
@@ -101,6 +105,10 @@ def parse_category_from_description(
         return {"category": "Shopping", "sub_category": "Online Retailers"}
     elif "walmart.com" in description.lower():
         return {"category": "Shopping", "sub_category": "Online Retailers"}
+    elif "etsy" in description.lower():
+        return {"category": "Shopping", "sub_category": "Online Retailers"}
+    elif "micro center" in description.lower():
+        return {"category": "Shopping", "sub_category": "Technology"}
     elif "name-cheap.com" in description.lower():
         return {"category": "Online Tools", "sub_category": "Domain Hosting"}
     elif "foreign transaction fee" in description.lower():
@@ -111,6 +119,26 @@ def parse_category_from_description(
         return {"category": "Veterinary"}
     elif "mountain" in description.lower():  # Rough skiing check
         return {"category": "Entertainment"}
+    elif "registry" in description.lower():
+        return {"category": "Gifts"}
+    elif "ATT*BILL PAYMENT" in description:
+        return {"category": "Utilities"}
+    elif "insurance" in description.lower():
+        return {"category": "Insurance"}
+    elif "gift" in description.lower():
+        return {"category": "Shopping"}
+    elif "airline" in description.lower():
+        return {"category": "Travel", "sub_category": "Flights"}
+    elif "hyatt" in description.lower():
+        return {"category": "Travel", "sub_category": "Hotel"}
+    elif "hilton" in description.lower():
+        return {"category": "Travel", "sub_category": "Hotel"}
+    elif "rent a ca" in description.lower():
+        return {"category": "Travel", "sub_category": "Rental Cars"}
+    elif "sixt" in description.lower():
+        return {"category": "Travel", "sub_category": "Rental Cars"}
+    elif "priceln" in description.lower():
+        return {"category": "Travel"}
 
     return None
 
@@ -126,32 +154,69 @@ def parse_category(*, category: str, description: str):
         return {"category": "Home Improvement"}
     elif category in {"Groceries", "Merchandise & Supplies-Groceries"}:
         return {"category": "Groceries", "sub_category": "Grocery Stores"}
-    elif category in {"Entertainment", "Travel/ Entertainment"}:
+    elif category in {
+        "Entertainment",
+        "Entertainment-General Attractions",
+        "Travel/ Entertainment",
+    }:
         return {"category": "Entertainment"}
-    elif category == "Gas":
+    elif category in {"Gas", "Transportation-Fuel", "Gasoline"}:
         return {"category": "Gas"}
     elif category == "Health & Wellness":
         return {"category": "Health & Wellness"}
-    elif category == "Bills & Utilities":
+    elif category in {"Bills & Utilities", "Communications-Cable & Internet Comm"}:
         return {"category": "Utilities"}
     elif category in {"Home", "Home Improvement"}:
         return {"category": "Home Improvement"}
     elif category == "Travel":
         return {"category": "Travel"}
+    elif category == "Travel-Airline":
+        return {"category": "Travel", "sub_category": "Flights"}
+    elif category == "Transportation-Parking Charges":
+        return {"category": "Automotive", "sub_category": "Parking"}
     elif category in ("Food & Drink", "Restaurants", "Dining"):
         return {"category": "Dining"}
-    elif category in ("Shopping", "Merchandise"):
+    elif "Restaurant" in category:
+        return {"category": "Dining"}
+    elif category == "Merchandise & Supplies-Book Stores":
+        return {"category": "Shopping", "sub_category": "Book Stores"}
+    elif category in (
+        "Shopping",
+        "Merchandise",
+        "Merchandise & Supplies-General Retail",
+        "Merchandise & Supplies-Arts & Jewelry",
+        "Merchandise & Supplies-Clothing Stores",
+        "Merchandise & Supplies-Department Stores",
+    ):
         return {"category": "Shopping"}
+    elif category == "Merchandise & Supplies-Internet Purchase":
+        return {"category": "Shopping", "sub_category": "Online Retailers"}
+    elif category == "Merchandise & Supplies-Sporting Goods Stores":
+        return {"category": "Shopping", "sub_category": "Sporting Goods"}
     elif category == "Personal":
         return {"category": "Personal"}
-    elif category == "Gifts & Donations":
+    elif category == "Department Stores":
+        return {"category": "Shopping", "sub_category": "Department Stores"}
+    elif category in {"Gifts & Donations", "Other-Charities"}:
         return {"category": "Donations"}
     elif category == "Supermarkets":
         return {"category": "Groceries", "sub_category": "Supermarkets"}
     elif category == "Automotive":
         return {"category": "Automotive"}
+    elif (
+        "medical" in category.lower()
+        or "healthcare" in category.lower()
+        or "health care" in category.lower()
+    ):
+        return {"category": "Medical"}
     elif category in ("Services", "Professional Services"):
         return {"category": "Services"}
+    elif category in {"Travel-Lodging"}:
+        return {"category": "Hotels"}
+    elif category in {"Merchandise & Supplies-Pharmacies"}:
+        return {"category": "Drug Stores"}
+    elif category in {"Transportation-Vehicle Leasing & Purchase"}:
+        return {"category": "Automotive"}
 
     return None
 

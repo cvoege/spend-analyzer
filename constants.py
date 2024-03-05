@@ -17,6 +17,7 @@ CATEGORIES: list[Category] = [
         "name": "Groceries",
         "sub_categories": [
             {"name": "Grocery Stores"},
+            {"name": "Book Stores"},
             {"name": "Whole Foods"},
             {"name": "Target"},
             {"name": "Supermakerts"},
@@ -63,6 +64,9 @@ CATEGORIES: list[Category] = [
             {"name": "Amazon"},
             {"name": "Gift Shops"},
             {"name": "Bike Shops"},
+            {"name": "Technology"},
+            {"name": "Department Stores"},
+            {"name": "Sporting Goods"},
         ],
     },
     {
@@ -71,6 +75,7 @@ CATEGORIES: list[Category] = [
             {"name": "Flights"},
             {"name": "Hotels"},
             {"name": "Ride Sharing"},
+            {"name": "Rental Cars"},
         ],
     },
     {
@@ -85,10 +90,11 @@ CATEGORIES: list[Category] = [
     {"name": "Medical", "sub_categories": [{"name": "Insurance Premiums"}]},
     {"name": "Veterinary"},
     {"name": "Insurance"},
-    {"name": "Automotive"},
+    {"name": "Automotive", "sub_categories": [{"name": "Parking"}]},
     {"name": "Utilities"},
     {"name": "Services"},
     {"name": "Donations"},
+    {"name": "Gifts"},
     {"name": "Personal", "sub_categories": [{"name": "Hair"}]},
     {"name": "Education", "sub_categories": [{"name": "Museums"}]},
     {"name": "Fees", "sub_categories": [{"name": "Foreign Transaction Fees"}]},

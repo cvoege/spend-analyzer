@@ -70,6 +70,9 @@ def write_local_data(local_data):
 
 
 def get_spreadsheet_id() -> str:
+    if len(sys.argv) > 1:
+        return sys.argv[1]
+
     local_data = get_local_data()
     if local_data.get("spreadsheet_id"):
         return local_data["spreadsheet_id"]
@@ -181,10 +184,10 @@ def main():
             "Date",
             "Description",
             "Category",
-            "Sub-Category",
-            "Original Category",
+            "Full Category",
             "Amount",
             "Credit Card",
+            "Original Category",
         ]
     ]
 
@@ -193,10 +196,13 @@ def main():
             f"{transaction['date'].month}/{transaction['date'].day}/{transaction['date'].year}",
             transaction["description"],
             transaction["category"],
-            transaction["sub_category"],
-            transaction["original_category"],
+            (
+                f"{transaction['category']}-"
+                f"{transaction['sub_category'] if transaction['sub_category'] != 'Unknown' else 'General'}"
+            ),
             f"${transaction['amount']}",
             transaction["credit_card_name"],
+            transaction["original_category"],
         ]
         for transaction in all_transactions
     ]
