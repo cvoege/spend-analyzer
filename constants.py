@@ -97,7 +97,16 @@ CATEGORIES: list[Category] = [
     {"name": "Gifts"},
     {"name": "Personal", "sub_categories": [{"name": "Hair"}]},
     {"name": "Education", "sub_categories": [{"name": "Museums"}]},
-    {"name": "Fees", "sub_categories": [{"name": "Foreign Transaction Fees"}]},
+    {
+        "name": "Fees",
+        "sub_categories": [
+            {
+                "name": "Foreign Transaction Fees",
+            },
+            {"name": "Credit Card Fees"},
+            {"name": "Bank Fees"},
+        ],
+    },
 ]
 
 
@@ -158,6 +167,32 @@ CREDIT_CARDS: list[CreditCard] = [
             "Gas": 0.03,
             "Online Retailers": 0.03,
         },
+    },
+    {
+        "name": "Chase Freedom Flex",
+        "brand": "Chase",
+        "foreign_transaction_fees": True,
+        "base_cash_back_rate": 0.01,
+        "category_cash_back_rates": {
+            "Travel": 0.05,
+            "Dining": 0.03,
+            "Drug Stores": 0.03,
+        },
+    },
+    {
+        "name": "Chase Sapphire Preferred",
+        "brand": "Chase",
+        "foreign_transaction_fees": True,
+        "base_cash_back_rate": 0.01,
+        "rotating_cash_back_rate": 0.05,
+        "known_categories": [
+            "Dining",
+            "Groceries",
+            "PayPal",
+            "Gas",
+            "Target",
+            "Amazon",
+        ],
     },
     {
         "name": "Discover It",

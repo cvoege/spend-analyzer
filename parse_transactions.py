@@ -1,5 +1,6 @@
 import datetime
 from pprint import pprint
+import sys
 from typing import Literal, Optional, TypedDict, Union
 from constants import CreditCard, Transaction
 from utils import parse_date, snakeify_english, to_dict_array
@@ -82,6 +83,8 @@ def parse_category_from_description(
         return {"category": "Shopping", "sub_category": "Amazon"}
     elif "TURBOTAX" in description:
         return {"category": "Online Tools", "sub_category": "Tax Software"}
+    elif "FREETAXUSA.COM" in description.upper():
+        return {"category": "Online Tools", "sub_category": "Tax Software"}
     elif "USTA LEAGUES" in description:
         return {"category": "Health & Wellness", "sub_category": "Tennis"}
     elif "USTA MEMBERSHIP" in description:
@@ -139,6 +142,8 @@ def parse_category_from_description(
         return {"category": "Travel", "sub_category": "Rental Cars"}
     elif "priceln" in description.lower():
         return {"category": "Travel"}
+    elif "PERFECT NORTH" in description.upper():
+        return {"category": "Entertainment"}
 
     return None
 
@@ -157,6 +162,7 @@ def parse_category(*, category: str, description: str):
     elif category in {
         "Entertainment",
         "Entertainment-General Attractions",
+        "Entertainment-Theatrical Events",
         "Travel/ Entertainment",
     }:
         return {"category": "Entertainment"}
@@ -209,10 +215,16 @@ def parse_category(*, category: str, description: str):
         or "health care" in category.lower()
     ):
         return {"category": "Medical"}
-    elif category in ("Services", "Professional Services"):
+    elif category in (
+        "Services",
+        "Professional Services",
+        "Business Services-Other Services",
+    ):
         return {"category": "Services"}
     elif category in {"Travel-Lodging"}:
         return {"category": "Hotels"}
+    elif category in {"Fees & Adjustments"}:
+        return {"category": "Fees", "sub_category": "Credit Card Fees"}
     elif category in {"Merchandise & Supplies-Pharmacies"}:
         return {"category": "Drug Stores"}
     elif category in {"Transportation-Vehicle Leasing & Purchase"}:
@@ -230,7 +242,9 @@ class BaseRow(TypedDict):
 
 
 def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
-    amount = float(row["Amount"].replace("$", ""))
+    amount = float(
+        row.get("Amount", row.get("Debit", row.get("Credit"))).replace("$", "")
+    )
     if credit_card["brand"] == "American Express":
         return {
             "description": row["Description"],
@@ -270,8 +284,15 @@ def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
             ),
         }
     elif credit_card["brand"] == "Citi":
-        # TODO
-        return None
+        return {
+            "description": row["Description"],
+            "category": "Unknown",
+            "amount": amount,
+            "date": parse_date(date_str=row["Date"]),
+            "type": (
+                "payment" if row.get("Credit") != "" or amount < 0 else "purchase"
+            ),
+        }
     elif credit_card["brand"] == "PNC":
         return {
             "description": row["Description"],
