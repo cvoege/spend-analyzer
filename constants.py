@@ -133,16 +133,18 @@ CATEGORIES: list[Category] = [
     },
 ]
 
+CreditCardBrand = Union[
+    Literal["American Express"],
+    Literal["Citi"],
+    Literal["Chase"],
+    Literal["PNC"],
+    Literal["Discover"],
+]
+
 
 class CreditCard(TypedDict):
     name: str
-    brand: Union[
-        Literal["American Express"],
-        Literal["Citi"],
-        Literal["Chase"],
-        Literal["PNC"],
-        Literal["Discover"],
-    ]
+    brand: CreditCardBrand
     foreign_transaction_fees: bool
     base_cash_back_rate: float
     category_cash_back_rates: NotRequired[dict[str, float]]

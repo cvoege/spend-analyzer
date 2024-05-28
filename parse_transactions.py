@@ -1,6 +1,9 @@
+import csv
 import datetime
+import glob
+import os
 from typing import Literal, Optional, TypedDict, Union
-from constants import CreditCard, Transaction
+from constants import CreditCard, CreditCardBrand, Transaction
 from utils import parse_date, to_dict_array
 
 
@@ -258,11 +261,12 @@ class BaseRow(TypedDict):
     type: Union[Literal["payment"], Literal["purchase"]]
 
 
-def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
-    amount = float(
-        row.get("Amount", row.get("Debit", row.get("Credit"))).replace("$", "")
-    )
-    if credit_card["brand"] == "American Express":
+def get_base_row(credit_card_brand: CreditCardBrand, row: dict[str, str]) -> BaseRow:
+    # amount = float(
+    #     row.get("Amount", row.get("Debit", row.get("Credit"))).replace("$", "")
+    # )
+    if credit_card_brand == "American Express":
+        amount = float(row["Amount"])
         return {
             "description": row["Description"],
             "category": row["Category"],
@@ -274,7 +278,8 @@ def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
                 else "purchase"
             ),
         }
-    elif credit_card["brand"] == "Discover":
+    elif credit_card_brand == "Discover":
+        amount = float(row["Amount"])
         return {
             "description": row["Description"],
             "category": row["Category"],
@@ -286,31 +291,34 @@ def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
                 else "purchase"
             ),
         }
-    elif credit_card["brand"] == "Chase":
+    elif credit_card_brand == "Chase":
+        amount = 0 - float(row["Amount"])
         return {
             "description": row["Description"],
             "category": row["Category"],
-            "amount": 0 - amount,
+            "amount": amount,
             "date": parse_date(date_str=row["Transaction Date"]),
             "type": (
                 "payment"
                 if "Payment" in row["Type"]
-                or amount > 0
+                or amount <= 0
                 or row["Description"] == "AUTOMATIC PAYMENT - THANK"
                 else "purchase"
             ),
         }
-    elif credit_card["brand"] == "Citi":
+    elif credit_card_brand == "Citi":
+        amount = float(row["Debit"])
         return {
             "description": row["Description"],
             "category": "Unknown",
             "amount": amount,
             "date": parse_date(date_str=row["Date"]),
             "type": (
-                "payment" if row.get("Credit") == "" or amount <= 0 else "purchase"
+                "payment" if row.get("Credit") != "" or amount <= 0 else "purchase"
             ),
         }
-    elif credit_card["brand"] == "PNC":
+    elif credit_card_brand == "PNC":
+        amount = float(row["Amount"])
         return {
             "description": row["Description"],
             "category": "Unknown",
@@ -319,16 +327,20 @@ def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
             "type": ("payment" if amount < 0 else "purchase"),
         }
     else:
-        raise ValueError(f"Unknown credit card brand {credit_card['brand']}")
+        raise ValueError(f"Unknown credit card brand {credit_card_brand}")
 
 
 def parse_transactions(
-    *, credit_card: CreditCard, headers: list[str], values: list[list[str]]
+    *,
+    credit_card_brand: CreditCardBrand,
+    csv_name: str,
+    headers: list[str],
+    values: list[list[str]],
 ) -> list[Transaction]:
     rows = to_dict_array(headers=headers, values=values)
     results = []
     for row in rows:
-        base_row = get_base_row(credit_card=credit_card, row=row)
+        base_row = get_base_row(credit_card_brand=credit_card_brand, row=row)
         original_category = base_row["category"]
         original_description = base_row["description"]
 
@@ -349,8 +361,90 @@ def parse_transactions(
             "original_category": original_category,
             "date": base_row["date"],
             "amount": base_row["amount"],
-            "credit_card_name": credit_card["name"],
+            "csv_name": csv_name,
             "original_data": row,
         }
         results.append(result)
     return results
+
+
+def get_credit_card_brand(*, csv_name: str, headers: list[str]):
+    if (
+        "Transaction Date" in headers
+        and "Post Date" in headers
+        and "Description" in headers
+        and "Category" in headers
+        and "Type" in headers
+        and "Amount" in headers
+        and "Memo" in headers
+    ):
+        return "Chase"
+    elif (
+        "Trans. Date" in headers
+        and "Post Date" in headers
+        and "Description" in headers
+        and "Category" in headers
+        and "Amount" in headers
+    ):
+        return "Discover"
+    elif (
+        "Date" in headers
+        and "Description" in headers
+        and "Amount" in headers
+        and "Extended Details" in headers
+        and "Appears On Your Statement As" in headers
+        and "Address" in headers
+        and "City/State" in headers
+        and "Zip Code" in headers
+        and "Country" in headers
+        and "Reference" in headers
+        and "Category" in headers
+    ):
+        return "American Express"
+    elif (
+        "Status" in headers
+        and "Date" in headers
+        and "Description" in headers
+        and "Debit" in headers
+        and "Credit" in headers
+    ):
+        return "Citi"
+    else:
+        raise ValueError(
+            f"Not sure how to parse {csv_name}, perhaps invalid or unrecognized CSV"
+        )
+
+
+CSV_DIR = "./files"
+
+
+def parse_csv(path: str) -> list[Transaction]:
+    csv_name = path.removeprefix(f"{CSV_DIR}/")
+    with open(path) as csv_file:
+        csv_reader = csv.reader(csv_file)
+        csv_rows = list(csv_reader)
+    headers = csv_rows[0]
+    values = csv_rows[1:]
+    credit_card_brand = get_credit_card_brand(csv_name=csv_name, headers=headers)
+
+    return parse_transactions(
+        credit_card_brand=credit_card_brand,
+        headers=headers,
+        values=values,
+        csv_name=csv_name,
+    )
+
+
+def parse_csvs() -> list[Transaction]:
+    paths = glob.glob(f"{CSV_DIR}/*")
+    all_transactions: list[Transaction] = []
+    for path in paths:
+        transactions = parse_csv(path)
+        all_transactions.extend(transactions)
+
+    sorted_transactions = sorted(
+        all_transactions,
+        key=lambda transaction: (transaction["date"], transaction["description"]),
+    )
+
+    return sorted_transactions

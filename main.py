@@ -16,7 +16,7 @@ from constants import (
     Transaction,
     TransactionData,
 )
-from parse_transactions import parse_transactions
+from parse_transactions import parse_csvs, parse_transactions
 from utils import flatten, snakeify_english
 
 # If modifying these scopes, delete the file token.json.
@@ -113,58 +113,10 @@ def main():
     """
 
     spreadsheet_id = get_spreadsheet_id()
-    index_data = get_index_data()
+    # index_data = get_index_data()
     sheets = get_sheets()
 
-    transaction_sheet_names = [row["transaction_sheet_name"] for row in index_data]
-
-    transaction_results = (
-        SHEETS_API.values()
-        .batchGet(spreadsheetId=spreadsheet_id, ranges=transaction_sheet_names)
-        .execute()
-    )
-
-    full_transaction_data: list[TransactionData] = []
-    for index_row in index_data:
-        current_value_range = None
-        for value_range in transaction_results["valueRanges"]:
-            if value_range["range"].startswith(
-                f"{index_row['transaction_sheet_name']}!"
-            ):
-                current_value_range = value_range
-                break
-
-        if not current_value_range:
-            print(
-                "Sheet index specified there would be a sheet called "
-                f"{index_row['transaction_sheet_name']}, but one was not found"
-            )
-            sys.exit(1)
-
-        full_transaction_data.append(
-            {
-                **index_row,
-                "transactions": parse_transactions(
-                    credit_card=[
-                        card
-                        for card in CREDIT_CARDS
-                        if card["name"] == index_row["credit_card"]
-                    ][0],
-                    headers=current_value_range["values"][0],
-                    values=current_value_range["values"][1:],
-                ),
-            }
-        )
-
-    all_transactions: list[Transaction] = sorted(
-        flatten(
-            [
-                transaction_data["transactions"]
-                for transaction_data in full_transaction_data
-            ]
-        ),
-        key=lambda transaction: transaction["date"],
-    )
+    all_transactions = parse_csvs()
 
     unknown_transactions = [
         transaction
@@ -193,8 +145,8 @@ def main():
             "Category",
             "Full Category",
             "Amount",
-            "Credit Card",
             "Original Category",
+            "CSV File Name",
         ]
     ]
 
@@ -208,8 +160,8 @@ def main():
                 f"{transaction['sub_category'] if transaction['sub_category'] != 'Unknown' else 'General'}"
             ),
             f"${transaction['amount']}",
-            transaction["credit_card_name"],
             transaction["original_category"],
+            transaction["csv_name"],
         ]
         for transaction in all_transactions
     ]
