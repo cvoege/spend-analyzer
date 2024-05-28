@@ -166,6 +166,16 @@ def main():
         key=lambda transaction: transaction["date"],
     )
 
+    unknown_transactions = [
+        transaction
+        for transaction in all_transactions
+        if transaction["category"] == "Unknown"
+    ]
+
+    if unknown_transactions:
+        print("Some transactions could not be categorized:")
+        pprint(unknown_transactions)
+
     sheet_names = [sheet["properties"]["title"] for sheet in sheets]
     if "All Transactions" not in sheet_names:
         batch_update_values_request_body = {
@@ -214,6 +224,15 @@ def main():
         # Additional ranges to update ...
     ]
     value_input_option = "USER_ENTERED"
+
+    rangeAll = "All Transactions!A1:Z"
+    body = {}
+    resultClear = (
+        SERVICE.spreadsheets()
+        .values()
+        .clear(spreadsheetId=spreadsheet_id, range=rangeAll, body=body)
+        .execute()
+    )
 
     body = {"valueInputOption": value_input_option, "data": data}
     result = (

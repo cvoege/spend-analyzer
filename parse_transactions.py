@@ -1,157 +1,165 @@
 import datetime
-from pprint import pprint
-import sys
 from typing import Literal, Optional, TypedDict, Union
 from constants import CreditCard, Transaction
-from utils import parse_date, snakeify_english, to_dict_array
+from utils import parse_date, to_dict_array
 
 
 def parse_category_from_description(
-    *, category: str, description: str
+    *, category: str, base_description: str
 ) -> Optional[str]:
-    if "wholefds" in description.lower():
+    description = base_description.upper()
+
+    if "WHOLEFDS" in description:
         return {"category": "Groceries", "sub_category": "Whole Foods"}
-    elif "netflix.com" in description.lower():
+    elif (
+        "NETFLIX.COM" in description
+        or "HULU" in description
+        or "SPOTIFY" in description
+    ):
         return {"category": "Entertainment", "sub_category": "Streaming"}
-    elif "HULU" in description.upper():
-        return {"category": "Entertainment", "sub_category": "Streaming"}
-    elif "SPOTIFY" in description.upper():
-        return {"category": "Entertainment", "sub_category": "Streaming"}
-    elif "kagi.com" in description.lower():
+    elif "KAGI.COM" in description:
         return {"category": "Online Tools", "sub_category": "Search Engines"}
-    elif "imax theatre indianapolis" in description.lower():
+    elif "IMAX THEATRE INDIANAPOLIS" in description:
         return {"category": "Entertainment", "sub_category": "Movie Theatres"}
-    elif "old national center_lobby" in description.lower():
-        return {"category": "Entertainment", "sub_category": "Concerts"}
-    elif "roasting" in description.lower():
+    elif "OLD NATIONAL CENTER" in description:
+        return {"category": "Entertainment", "sub_category": "Shows/Concerts"}
+    elif "ROASTING" in description:
         return {"category": "Dining", "sub_category": "Coffee"}
     elif "TARGET        " in description:
         return {"category": "Groceries", "sub_category": "Target"}
-    elif "racquet" in description.lower() or "tennis" in description.lower():
-        return {"category": "Health & Wellness", "sub_category": "Tennis"}
-    elif "FUSEK'S TRUE VALUE" == description:
+    elif "RACQUET" in description or "TENNIS" in description:
+        return {"category": "Recreation", "sub_category": "Tennis"}
+    elif "FUSEK'S TRUE VALUE" in description or "THE HOME DEPOT" in description:
         return {"category": "Home Improvement", "sub_category": "Hardware Stores"}
-    elif "THE HOME DEPOT" in description:
-        return {"category": "Home Improvement", "sub_category": "Hardware Stores"}
-    elif "SOUTHWES    " in description and (category in {"Travel", "Unknown"}):
-        return {"category": "Travel", "sub_category": "Flights"}
-    elif "DELTA AIR" in description and (category in {"Travel", "Unknown"}):
-        return {"category": "Travel", "sub_category": "Flights"}
-    elif "FRONTIER" in description and (category in {"Travel", "Unknown"}):
+    elif (
+        "SOUTHWES    " in description
+        or "DELTA AIR" in description
+        or "FRONTIER" in description
+        or "AIRLINE" in description
+        or "AIR FRANCE" in description
+    ):
         return {"category": "Travel", "sub_category": "Flights"}
     elif "MISTER SPARKY-INDY" == description:
         return {"category": "Home Improvement", "sub_category": "Electricians"}
-    elif "inn" in description.lower() and (category in {"Travel", "Unknown"}):
+    elif (
+        "HOTELS" in description
+        or "INN" in description
+        or "HYATT" in description
+        or "HILTON" in description
+        or "KASA LIVING  INC." in description
+    ):
         return {"category": "Travel", "sub_category": "Hotels"}
-    elif "hotels" in description.lower() and (category in {"Travel", "Unknown"}):
-        return {"category": "Travel", "sub_category": "Hotels"}
-    elif "ikea" in description.lower() and (
-        category in {"Home", "Home Improvement", "Unknown"}
-    ):
-        return {"category": "Home Improvement", "sub_category": "Furniture Stores"}
-    elif "heating" in description.lower() and (
-        category in {"Home", "Home Improvement", "Unknown"}
-    ):
+    elif "HEATING" in description or "CONTROL TECH" in description:
         return {"category": "Home Improvement", "sub_category": "HVAC"}
-    elif "control tech" in description.lower() and (
-        category in {"Home", "Home Improvement", "Unknown"}
-    ):
-        return {"category": "Home Improvement", "sub_category": "HVAC"}
-    elif "ben franklin" in description.lower() and (
-        category in {"Home", "Home Improvement", "Unknown"}
-    ):
+    elif "BEN FRANKLIN" in description:
         return {"category": "Home Improvement", "sub_category": "Plumbing"}
     elif "LS SILVER IN THE CITY" in description:
         return {"category": "Shopping", "sub_category": "Gift Shops"}
-    elif "LS GRAY GOAT BICYCLE" in description:
-        return {"category": "Shopping", "sub_category": "Bike Shops"}
     elif "CVS/PHARMACY" in description:
         return {"category": "Drug Stores"}
-    elif "FREEWHEELIN COMMUNITY BI" == description:
+    elif (
+        "LS GRAY GOAT BICYCLE" in description
+        or "FREEWHEELIN COMMUNITY BI" == description
+    ):
         return {"category": "Shopping", "sub_category": "Bike Shops"}
     elif "MUSEUM" == description:
         return {"category": "Education", "sub_category": "Museums"}
     elif "GENTSPA AT THE HILTON" == description:
         return {"category": "Personal", "sub_category": "Hair"}
-    elif "NYTimes" in description:
+    elif "NYTIMES" in description:
         return {"category": "Entertainment", "sub_category": "Newspapers"}
-    elif "Prime Video" in description:
+    elif "PRIME VIDEO" in description:
         return {"category": "Entertainment", "sub_category": "Streaming"}
-    elif "amzn mktp" in description.lower() or "amazon.com" in description.lower():
-        return {"category": "Shopping", "sub_category": "Amazon"}
-    elif "Amazon Prime*" in description:
-        return {"category": "Shopping", "sub_category": "Amazon"}
-    elif "TURBOTAX" in description:
-        return {"category": "Online Tools", "sub_category": "Tax Software"}
-    elif "FREETAXUSA.COM" in description.upper():
-        return {"category": "Online Tools", "sub_category": "Tax Software"}
-    elif "USTA LEAGUES" in description:
-        return {"category": "Health & Wellness", "sub_category": "Tennis"}
-    elif "USTA MEMBERSHIP" in description:
-        return {"category": "Health & Wellness", "sub_category": "Tennis"}
-    elif "nintendo" in description.lower():
-        return {"category": "Entertainment", "sub_category": "Video Games"}
-    elif "nintendo" in description.lower():
-        return {"category": "Entertainment", "sub_category": "Video Games"}
     elif (
-        "steam purchase" in description.lower()
-        or "valve bellevue wa" in description.lower()
+        "AMZN MKTP" in description
+        or "AMAZON.COM" in description
+        or "AMAZON PRIME*" in description
+    ):
+        return {"category": "Shopping", "sub_category": "Amazon"}
+    elif "TURBOTAX" in description or "FREETAXUSA.COM" in description:
+        return {"category": "Online Tools", "sub_category": "Tax Software"}
+    elif "HAMILTONCOTREASURER" in description:
+        return {"category": "Taxes", "sub_category": "Property"}
+    elif "SWIPE SIMPLE GATEWAY INDIANAPOLIS IN" in description:
+        return {"category": "Home Improvement", "sub_category": "Other Contractors"}
+    elif "USTA LEAGUES" in description or "USTA MEMBERSHIP" in description:
+        return {"category": "Recreation", "sub_category": "Tennis"}
+    elif (
+        "NINTENDO" in description
+        or "STEAM PURCHASE" in description
+        or "VALVE BELLEVUE WA" in description
+        or "GAIJIN GAMES" in description
+        or "OCULUS" in description
     ):
         return {"category": "Entertainment", "sub_category": "Video Games"}
-    elif "gaijin games" in description.lower():
-        return {"category": "Entertainment", "sub_category": "Video Games"}
-    elif "Oculus" == description:
-        return {"category": "Entertainment", "sub_category": "Video Games"}
-    elif "top golf" in description.lower():
-        return {"category": "Entertainment"}
-    elif "target.com" in description.lower():
+    elif "TOP GOLF" in description or "ROWING" in description:
+        return {"category": "Recreation"}
+    elif (
+        "TARGET.COM" in description
+        or "WALMART.COM" in description
+        or "ETSY" in description
+    ):
         return {"category": "Shopping", "sub_category": "Online Retailers"}
-    elif "walmart.com" in description.lower():
-        return {"category": "Shopping", "sub_category": "Online Retailers"}
-    elif "etsy" in description.lower():
-        return {"category": "Shopping", "sub_category": "Online Retailers"}
-    elif "micro center" in description.lower():
+    elif "MICRO CENTER" in description:
         return {"category": "Shopping", "sub_category": "Technology"}
-    elif "name-cheap.com" in description.lower():
+    elif "NAME-CHEAP.COM" in description:
         return {"category": "Online Tools", "sub_category": "Domain Hosting"}
-    elif "foreign transaction fee" in description.lower():
+    elif "FOREIGN TRANSACTION FEE" in description:
         return {"category": "Fees", "sub_category": "Foreign Transaction Fees"}
-    elif "uber" in description.lower() and "trip" in description.lower():
+    elif "UBER" in description and "TRIP" in description or "LYFT" in description:
         return {"category": "Travel", "sub_category": "Ride Sharing"}
-    elif "www.massaveanimalclini" in description.lower():
+    elif "WWW.MASSAVEANIMALCLINI" in description:
         return {"category": "Veterinary"}
-    elif "mountain" in description.lower():  # Rough skiing check
-        return {"category": "Entertainment"}
-    elif "registry" in description.lower():
+    elif (
+        "MOUNTAIN" in description
+        or "SLOPES" in description
+        or "PERFECT NORTH" in description
+        or "CASCADEPORTAGE" in description
+    ):
+        return {"category": "Recreation", "sub_category": "Skiing"}
+    elif "REGISTRY" in description:
         return {"category": "Gifts"}
-    elif "ATT*BILL PAYMENT" in description:
+    elif "ATT*BILL PAYMENT" in description or "DUKE-ENERGY" in description:
         return {"category": "Utilities"}
-    elif "insurance" in description.lower():
+    elif "INSURANCE" in description:
         return {"category": "Insurance"}
-    elif "gift" in description.lower():
+    elif "GIFT" in description:
         return {"category": "Shopping"}
-    elif "airline" in description.lower():
-        return {"category": "Travel", "sub_category": "Flights"}
-    elif "hyatt" in description.lower():
-        return {"category": "Travel", "sub_category": "Hotel"}
-    elif "hilton" in description.lower():
-        return {"category": "Travel", "sub_category": "Hotel"}
-    elif "rent a ca" in description.lower():
+    elif "FASTPARK" in description or "FAST PARK IND" in description:
+        return {"category": "Travel", "sub_category": "Parking"}
+    elif "RENT A CA" in description or "SIXT" in description:
         return {"category": "Travel", "sub_category": "Rental Cars"}
-    elif "sixt" in description.lower():
-        return {"category": "Travel", "sub_category": "Rental Cars"}
-    elif "priceln" in description.lower():
-        return {"category": "Travel"}
-    elif "PERFECT NORTH" in description.upper():
-        return {"category": "Entertainment"}
+    elif "PATREON" in description:
+        return {"category": "Entertainment", "sub_category": "Patreon"}
+    elif "USPS.COM STAMP" in description:
+        return {"category": "Services"}
+    elif "CARWASH" in description:
+        return {"category": "Automotive", "sub_category": "Car Wash"}
+    elif "CHASE TRAVEL" in description or "PRICELN" in description:
+        return {"category": "Travel", "sub_category": "Travel Portal"}
+    elif "PARKINDY" in description:
+        return {"category": "Automotive", "sub_category": "Parking"}
+    elif description.startswith("WDW "):
+        return {"category": "Travel", "sub_category": "Theme Parks"}
+    elif "BCYCLE" in description:
+        return {"category": "Travel", "sub_category": "Bike Share"}
+    elif "HOMEGOODS" in description or "IKEA" in description:
+        return {"category": "Shopping", "sub_category": "Furniture"}
+    elif "ATHLETICO" in description:
+        return {"category": "Medical", "sub_category": "Physical Therapy"}
+    elif "MINUTECLINIC" in description:
+        return {"category": "Medical", "sub_category": "Quick/Urgent Care"}
+    elif "PSVJ *JPMC FEE".upper() in description:
+        return {"category": "Fees", "sub_category": "Transaction Fees"}
 
     return None
 
 
-def parse_category(*, category: str, description: str):
+def parse_category(*, category: str, base_description: str):
     category_info = parse_category_from_description(
-        category=category, description=description
+        category=category, base_description=base_description
     )
+
     if category_info:
         return category_info
 
@@ -166,10 +174,13 @@ def parse_category(*, category: str, description: str):
         "Travel/ Entertainment",
     }:
         return {"category": "Entertainment"}
+    elif category in {
+        "Entertainment-General Events",
+        "Entertainment-Theatrical Events",
+    }:
+        return {"category": "Entertainment", "sub_category": "Shows/Concerts"}
     elif category in {"Gas", "Transportation-Fuel", "Gasoline"}:
         return {"category": "Gas"}
-    elif category == "Health & Wellness":
-        return {"category": "Health & Wellness"}
     elif category in {"Bills & Utilities", "Communications-Cable & Internet Comm"}:
         return {"category": "Utilities"}
     elif category in {"Home", "Home Improvement"}:
@@ -182,7 +193,7 @@ def parse_category(*, category: str, description: str):
         return {"category": "Automotive", "sub_category": "Parking"}
     elif category in ("Food & Drink", "Restaurants", "Dining"):
         return {"category": "Dining"}
-    elif "Restaurant" in category:
+    elif "RESTAURANT" in category.upper():
         return {"category": "Dining"}
     elif category == "Merchandise & Supplies-Book Stores":
         return {"category": "Shopping", "sub_category": "Book Stores"}
@@ -190,19 +201,24 @@ def parse_category(*, category: str, description: str):
         "Shopping",
         "Merchandise",
         "Merchandise & Supplies-General Retail",
-        "Merchandise & Supplies-Arts & Jewelry",
-        "Merchandise & Supplies-Clothing Stores",
-        "Merchandise & Supplies-Department Stores",
     ):
         return {"category": "Shopping"}
+    elif (
+        category
+        in (
+            "Merchandise & Supplies-Arts & Jewelry",
+            "Merchandise & Supplies-Clothing Stores",
+            "Merchandise & Supplies-Department Stores",
+        )
+        or category == "Department Stores"
+    ):
+        return {"category": "Shopping", "sub_category": "Clothes"}
     elif category == "Merchandise & Supplies-Internet Purchase":
         return {"category": "Shopping", "sub_category": "Online Retailers"}
     elif category == "Merchandise & Supplies-Sporting Goods Stores":
         return {"category": "Shopping", "sub_category": "Sporting Goods"}
     elif category == "Personal":
         return {"category": "Personal"}
-    elif category == "Department Stores":
-        return {"category": "Shopping", "sub_category": "Department Stores"}
     elif category in {"Gifts & Donations", "Other-Charities"}:
         return {"category": "Donations"}
     elif category == "Supermarkets":
@@ -213,6 +229,7 @@ def parse_category(*, category: str, description: str):
         "medical" in category.lower()
         or "healthcare" in category.lower()
         or "health care" in category.lower()
+        or "Health & Wellness".lower() in category.lower()
     ):
         return {"category": "Medical"}
     elif category in (
@@ -290,7 +307,7 @@ def get_base_row(credit_card: CreditCard, row: dict[str, str]) -> BaseRow:
             "amount": amount,
             "date": parse_date(date_str=row["Date"]),
             "type": (
-                "payment" if row.get("Credit") != "" or amount < 0 else "purchase"
+                "payment" if row.get("Credit") == "" or amount <= 0 else "purchase"
             ),
         }
     elif credit_card["brand"] == "PNC":
@@ -313,19 +330,20 @@ def parse_transactions(
     for row in rows:
         base_row = get_base_row(credit_card=credit_card, row=row)
         original_category = base_row["category"]
+        original_description = base_row["description"]
 
         if base_row["type"] == "payment":
             continue
 
         category_info = parse_category(
-            description=base_row["description"], category=original_category
+            base_description=base_row["description"], category=original_category
         )
 
         if not category_info:
             category_info = {"category": "Unknown"}
 
         result = {
-            "description": base_row["description"],
+            "description": original_description,
             "category": category_info["category"],
             "sub_category": category_info.get("sub_category", "Unknown"),
             "original_category": original_category,
