@@ -25,7 +25,6 @@ CATEGORIES: list[Category] = [
         ],
     },
     {"name": "Gas"},
-    {"name": "Amazon"},
     {
         "name": "Entertainment",
         "sub_categories": [
@@ -50,7 +49,6 @@ CATEGORIES: list[Category] = [
         "name": "Home Improvement",
         "sub_categories": [
             {"name": "Hardware Stores"},
-            {"name": "Furniture Stores"},
             {"name": "Electricians"},
             {"name": "Plumbers"},
             {"name": "HVAC"},
